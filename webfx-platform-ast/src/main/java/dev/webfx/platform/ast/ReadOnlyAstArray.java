@@ -32,11 +32,11 @@ public interface ReadOnlyAstArray extends ReadOnlyAstNode, Iterable<Object> {
     }
 
     default boolean isObject(int index) {
-        return AST.isObject(getElement(index));
+        return AST.isObject((Object) getElement(index));
     }
 
     default boolean isArray(int index) {
-        return AST.isArray(getElement(index));
+        return AST.isArray((Object) getElement(index));
     }
 
     default boolean isScalar(int index) {
