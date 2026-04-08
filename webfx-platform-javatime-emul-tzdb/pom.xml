@@ -17,6 +17,7 @@
         <walkingkooka.version>1.0-SNAPSHOT</walkingkooka.version>
     </properties>
 
+<!--
     <repositories>
 
         <repository>
@@ -34,30 +35,30 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <!-- These annotation processors will generate some missing classes in the source code (in
+                    &lt;!&ndash; These annotation processors will generate some missing classes in the source code (in
                       target/generated-sources), unless they have been copied back to the source code (which is the case
                       at the moment because the timezone annotation processor use illegal reflection access (works
-                      only with Java 11, not over) -->
+                      only with Java 11, not over) &ndash;&gt;
                     <annotationProcessorPaths>
-                        <!-- Will generate walkingkooka.j2cl.java.util.locale.generated.LocaleProvider -->
+                        &lt;!&ndash; Will generate walkingkooka.j2cl.java.util.locale.generated.LocaleProvider &ndash;&gt;
                         <path>
                             <groupId>walkingkooka</groupId>
                             <artifactId>j2cl-java-util-Locale-annotation-processor</artifactId>
                             <version>${walkingkooka.version}</version>
                         </path>
-                        <!-- Will generate walkingkooka.j2cl.java.util.timezone.generated.TimeZoneProvider -->
+                        &lt;!&ndash; Will generate walkingkooka.j2cl.java.util.timezone.generated.TimeZoneProvider &ndash;&gt;
                         <path>
                             <groupId>walkingkooka</groupId>
                             <artifactId>j2cl-java-util-TimeZone-annotation-processor</artifactId>
                             <version>${walkingkooka.version}</version>
                         </path>
-                        <!-- Will generate walkingkooka.j2cl.java.text.generated.* classes -->
+                        &lt;!&ndash; Will generate walkingkooka.j2cl.java.text.generated.* classes &ndash;&gt;
                         <path>
                             <groupId>walkingkooka</groupId>
                             <artifactId>j2cl-java-text-annotation-processor</artifactId>
                             <version>${walkingkooka.version}</version>
                         </path>
-                        <!-- Will generate walkingkooka.j2cl.java.util.currency.generated.CurrencyProvider -->
+                        &lt;!&ndash; Will generate walkingkooka.j2cl.java.util.currency.generated.CurrencyProvider &ndash;&gt;
                         <path>
                             <groupId>walkingkooka</groupId>
                             <artifactId>j2cl-java-util-currency-annotation-processor</artifactId>
@@ -80,5 +81,6 @@
 
         </plugins>
     </build>
+-->
 
 </project>
