@@ -124,6 +124,7 @@
         <module>webfx-platform-console</module>
         <module>webfx-platform-console-elemental2</module>
         <module>webfx-platform-console-java</module>
+        <module>webfx-platform-console-sl4j-plugin</module>
         <module>webfx-platform-fetch</module>
         <module>webfx-platform-fetch-ast-json</module>
         <module>webfx-platform-fetch-elemental2</module>
