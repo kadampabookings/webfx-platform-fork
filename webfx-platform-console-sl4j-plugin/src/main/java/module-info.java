@@ -6,7 +6,7 @@
 module webfx.platform.console.sl4j.plugin {
 
     // Direct dependencies modules
-    requires org.slf4j.jul;
+    requires org.slf4j;
     requires webfx.platform.console;
 
     // Exported packages
