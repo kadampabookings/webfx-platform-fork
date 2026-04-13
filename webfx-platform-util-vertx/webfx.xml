@@ -12,12 +12,4 @@
         <plugin-module>org.slf4j.jul</plugin-module>
     </dependencies>
 
-    <required-libraries>
-        <library name="org.slf4j.jul">
-            <artifactId>slf4j-jdk14</artifactId>
-            <groupId>org.slf4j</groupId>
-            <version>2.0.7</version>
-        </library>
-    </required-libraries>
-
 </project>

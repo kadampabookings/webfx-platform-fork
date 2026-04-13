@@ -358,6 +358,16 @@
 
         </group>
 
+        <library name="org.slf4j.jul">
+            <artifactId>slf4j-jdk14</artifactId>
+            <groupId>org.slf4j</groupId>
+            <version>2.0.7</version>
+            <exported-packages>
+                <package>org.slf4j</package>
+            </exported-packages>
+        </library>
+
+
     </required-libraries>
 
     <maven-repositories>
