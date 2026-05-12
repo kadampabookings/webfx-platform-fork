@@ -17,6 +17,7 @@
         <walkingkooka.version>1.0-SNAPSHOT</walkingkooka.version>
     </properties>
 
+<!--
     <repositories>
 
         <repository>
@@ -26,6 +27,7 @@
         </repository>
 
     </repositories>
+-->
 
     <dependencies>
 
@@ -242,6 +244,7 @@
         </plugins>
 
     </build>
+<!--
     <profiles>
         <profile>
             <id>j2cl-javatime-copy-walkingkooka-sources</id>
@@ -254,7 +257,7 @@
                     <version>${walkingkooka.version}</version>
                 </dependency>
 
-                <!-- must be first to help guarantee overriding JRE's Locale -->
+                &lt;!&ndash; must be first to help guarantee overriding JRE's Locale &ndash;&gt;
                 <dependency>
                     <groupId>walkingkooka</groupId>
                     <artifactId>j2cl-java-util-Locale</artifactId>
@@ -325,7 +328,7 @@
                                     <goal>unpack-dependencies</goal>
                                 </goals>
                                 <configuration>
-                                    <!-- excluding  -->
+                                    &lt;!&ndash; excluding  &ndash;&gt;
                                     <excludeGroupIds>dev.webfx</excludeGroupIds>
                                     <excludeTransitive>true</excludeTransitive>
                                     <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
@@ -347,8 +350,8 @@
                                             <version>${walkingkooka.version}</version>
                                             <includes>**/*.java</includes>
                                             <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-                                            <!-- Excludes for j2cl-java-time - see https://github.com/mP1/j2cl-java-time/blob/master/src/main/java/.walkingkooka-j2cl-maven-plugin-ignored-files.txt -->
-                                            <!--<excludes>**/TzdbZoneRulesCompiler.* , **/Ser.*</excludes>-->
+                                            &lt;!&ndash; Excludes for j2cl-java-time - see https://github.com/mP1/j2cl-java-time/blob/master/src/main/java/.walkingkooka-j2cl-maven-plugin-ignored-files.txt &ndash;&gt;
+                                            &lt;!&ndash;<excludes>**/TzdbZoneRulesCompiler.* , **/Ser.*</excludes>&ndash;&gt;
                                         </artifactItem>
                                         <artifactItem>
                                             <groupId>walkingkooka</groupId>
@@ -412,8 +415,8 @@
                                             <version>${walkingkooka.version}</version>
                                             <includes>**/*.java</includes>
                                             <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-                                            <!-- Excludes for walkingkooka - see https://github.com/mP1/walkingkooka/blob/master/src/main/java/.walkingkooka-j2cl-maven-plugin-ignored-files.txt -->
-                                            <!--<excludes>*/reflect/Class* , */reflect/Fake* , */reflect/Field* , */reflect/Java* , */reflect/Method* , */reflect/PackageName* , */text/*ReaderConsumingCharSequence* , **/*Testing.* , **/*Testing2.* , **/Properties* , **/MissingSystemProperty* , **/SystemProperty*</excludes>-->
+                                            &lt;!&ndash; Excludes for walkingkooka - see https://github.com/mP1/walkingkooka/blob/master/src/main/java/.walkingkooka-j2cl-maven-plugin-ignored-files.txt &ndash;&gt;
+                                            &lt;!&ndash;<excludes>*/reflect/Class* , */reflect/Fake* , */reflect/Field* , */reflect/Java* , */reflect/Method* , */reflect/PackageName* , */text/*ReaderConsumingCharSequence* , **/*Testing.* , **/*Testing2.* , **/Properties* , **/MissingSystemProperty* , **/SystemProperty*</excludes>&ndash;&gt;
                                             <excludes>**/*Testing.* , **/*Testing2.*</excludes>
                                         </artifactItem>
                                         <artifactItem>
@@ -422,8 +425,8 @@
                                             <version>${walkingkooka.version}</version>
                                             <includes>**/*.java</includes>
                                             <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-                                            <!-- Excludes for walkingkooka-text-printer - see https://github.com/mP1/walkingkooka-text-printer/blob/master/src/main/java/.walkingkooka-j2cl-maven-plugin-ignored-files.txt -->
-                                            <!--<excludes>**/*Testing* , **/PrinterPrintStream.* , **/WriterPrinter.* , **/PrinterWriter.*</excludes>-->
+                                            &lt;!&ndash; Excludes for walkingkooka-text-printer - see https://github.com/mP1/walkingkooka-text-printer/blob/master/src/main/java/.walkingkooka-j2cl-maven-plugin-ignored-files.txt &ndash;&gt;
+                                            &lt;!&ndash;<excludes>**/*Testing* , **/PrinterPrintStream.* , **/WriterPrinter.* , **/PrinterWriter.*</excludes>&ndash;&gt;
                                             <excludes>**/*Testing*</excludes>
                                         </artifactItem>
                                     </artifactItems>
@@ -437,5 +440,6 @@
 
         </profile>
     </profiles>
+-->
 
 </project>
