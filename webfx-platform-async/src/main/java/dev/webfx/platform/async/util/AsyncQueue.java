@@ -7,23 +7,37 @@ import dev.webfx.platform.console.Console;
 import dev.webfx.platform.scheduler.Scheduled;
 import dev.webfx.platform.scheduler.Scheduler;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Queue;
+import java.util.PriorityQueue;
 
 /**
  * @author Bruno Salmon
  */
 public final class AsyncQueue {
 
-    private record WaitingOperation<A, R>(A argument, Promise<R> promise, AsyncFunction<A, R> executor) {}
+    private record WaitingOperation<A, R>(
+        A argument,
+        Promise<R> promise,
+        AsyncFunction<A, R> executor,
+        int priority,
+        Object sourceId,
+        long seq
+    ) {}
+
+    // Higher priority first; within the same priority band, lower seq first (preserving FIFO order)
+    private static final Comparator<WaitingOperation<?, ?>> WAITING_ORDER =
+        Comparator.<WaitingOperation<?, ?>>comparingInt(WaitingOperation::priority).reversed()
+            .thenComparingLong(WaitingOperation::seq);
 
     private final String name;
     private final int executingQueueMaxSize;
-    private final Queue<WaitingOperation<?, ?>> waitingOperations = new ArrayDeque<>();
+    private final PriorityQueue<WaitingOperation<?, ?>> waitingOperations = new PriorityQueue<>(WAITING_ORDER);
     private final List<Object> executingOperations = new ArrayList<>();
     private long executionTimeout; // Timeout in milliseconds, 0 or negative means no timeout
+    private long nextSeq; // Monotonic sequence used as a tiebreaker to preserve FIFO order within a priority band
 
     public AsyncQueue(int executingQueueMaxSize) {
         this(executingQueueMaxSize, null);
@@ -33,17 +47,32 @@ public final class AsyncQueue {
         this.executingQueueMaxSize = executingQueueMaxSize;
         this.name = name;
     }
-    
+
     public long getExecutionTimeout() {
         return executionTimeout;
     }
-    
+
     public AsyncQueue setExecutionTimeout(long timeoutMs) {
         executionTimeout = timeoutMs;
         return this;
     }
 
     public <A, R> Future<R> addAsyncOperation(A argument, AsyncFunction<A, R> executor) {
+        return addAsyncOperation(argument, 0, null, executor);
+    }
+
+    /**
+     * Submits an operation with an explicit priority and an optional source identifier.
+     * <p>
+     * Priority semantics: when picking the next operation to execute, the queue picks the one with
+     * the highest priority value; ties are broken by FIFO order. Standard priority is 0.
+     * <p>
+     * Source semantics: when {@code sourceId} is non-null and a pending waiting operation already
+     * has the same {@code sourceId}, that older operation is removed from the queue and its
+     * future is failed with a {@link SupersededOperationException} — typical for "user is typing
+     * in a search box" patterns where the latest input invalidates earlier in-flight queries.
+     */
+    public <A, R> Future<R> addAsyncOperation(A argument, int priority, Object sourceId, AsyncFunction<A, R> executor) {
         // Can it be executed now?
         synchronized (executingOperations) {
             if (executingOperations.size() < executingQueueMaxSize) { // Yes
@@ -52,10 +81,30 @@ public final class AsyncQueue {
             }
         }
 
-        // No, so we put it in the waiting queue with a promise
+        // No — queue it. The "cancel any same-source pending op" step must happen in the same
+        // critical section as the add, otherwise two concurrent same-source adds could each find
+        // an empty queue, both insert, and silently break source coalescing.
         Promise<R> promise = Promise.promise();
+        WaitingOperation<?, ?> cancelled = null;
         synchronized (waitingOperations) {
-            waitingOperations.add(new WaitingOperation<>(argument, promise, executor));
+            if (sourceId != null) {
+                Iterator<WaitingOperation<?, ?>> it = waitingOperations.iterator();
+                while (it.hasNext()) {
+                    WaitingOperation<?, ?> op = it.next();
+                    if (sourceId.equals(op.sourceId())) {
+                        it.remove();
+                        cancelled = op;
+                        // A source has at most one pending op once we hold the lock — break.
+                        break;
+                    }
+                }
+            }
+            waitingOperations.add(new WaitingOperation<>(argument, promise, executor, priority, sourceId, nextSeq++));
+        }
+        // Fail the superseded promise outside the lock — listeners may re-enter addAsyncOperation.
+        if (cancelled != null) {
+            cancelled.promise().tryFail(new SupersededOperationException(
+                "Cancelled: superseded by a newer request from the same source"));
         }
         return promise.future();
     }
@@ -65,16 +114,16 @@ public final class AsyncQueue {
         Scheduled scheduledTimeout;
         if (executionTimeout > 0) {
             Promise<R> promise = Promise.promise();
-            scheduledTimeout = Scheduler.scheduleDelay(executionTimeout, () -> 
+            scheduledTimeout = Scheduler.scheduleDelay(executionTimeout, () ->
                 promise.tryFail("Timeout: the operation exceeded " + executionTimeout + " ms to execute"));
             future.onComplete(ar -> {
                 if (ar.succeeded())
                     promise.tryComplete(ar.result());
-                else 
+                else
                     promise.tryFail(ar.cause());
             });
             future = promise.future();
-        } else 
+        } else
             scheduledTimeout = null;
         return future
             .onComplete(ar -> {
