@@ -38,6 +38,7 @@ public final class AsyncQueue {
     private final List<Object> executingOperations = new ArrayList<>();
     private long executionTimeout; // Timeout in milliseconds, 0 or negative means no timeout
     private long nextSeq; // Monotonic sequence used as a tiebreaker to preserve FIFO order within a priority band
+    private int peakWaitingCount; // High-water mark of the waiting-queue size (monitoring only)
 
     public AsyncQueue(int executingQueueMaxSize) {
         this(executingQueueMaxSize, null);
@@ -100,6 +101,8 @@ public final class AsyncQueue {
                 }
             }
             waitingOperations.add(new WaitingOperation<>(argument, promise, executor, priority, sourceId, nextSeq++));
+            if (waitingOperations.size() > peakWaitingCount)
+                peakWaitingCount = waitingOperations.size();
         }
         // Fail the superseded promise outside the lock — listeners may re-enter addAsyncOperation.
         if (cancelled != null) {
@@ -152,6 +155,37 @@ public final class AsyncQueue {
         if (waitingOperation != null) {
             executeOperation(waitingOperation.argument, waitingOperation.executor)
                 .onComplete(waitingOperation.promise);
+        }
+    }
+
+    /** The queue's name (e.g. "POSTGRES-QUERY"), or null. For monitoring. */
+    public String getName() {
+        return name;
+    }
+
+    /** Max number of operations that may execute concurrently (the concurrency cap). */
+    public int getExecutingQueueMaxSize() {
+        return executingQueueMaxSize;
+    }
+
+    /** Number of operations currently waiting (queued, not yet started). For monitoring. */
+    public int getWaitingCount() {
+        synchronized (waitingOperations) {
+            return waitingOperations.size();
+        }
+    }
+
+    /** Number of operations currently executing (bounded by the concurrency cap). For monitoring. */
+    public int getExecutingCount() {
+        synchronized (executingOperations) {
+            return executingOperations.size();
+        }
+    }
+
+    /** High-water mark of {@link #getWaitingCount()} since creation. For monitoring. */
+    public int getPeakWaitingCount() {
+        synchronized (waitingOperations) {
+            return peakWaitingCount;
         }
     }
 
