@@ -39,6 +39,7 @@ public final class AsyncQueue {
     private long executionTimeout; // Timeout in milliseconds, 0 or negative means no timeout
     private long nextSeq; // Monotonic sequence used as a tiebreaker to preserve FIFO order within a priority band
     private int peakWaitingCount; // High-water mark of the waiting-queue size (monitoring only)
+    private int shedCount; // Total operations rejected by rejectIfWouldWait admission (monitoring only)
 
     public AsyncQueue(int executingQueueMaxSize) {
         this(executingQueueMaxSize, null);
@@ -74,12 +75,37 @@ public final class AsyncQueue {
      * in a search box" patterns where the latest input invalidates earlier in-flight queries.
      */
     public <A, R> Future<R> addAsyncOperation(A argument, int priority, Object sourceId, AsyncFunction<A, R> executor) {
+        return addAsyncOperation(argument, priority, sourceId, executor, false);
+    }
+
+    /**
+     * Same as {@link #addAsyncOperation(Object, int, Object, AsyncFunction)}, with a load-shedding
+     * admission policy: when {@code rejectIfWouldWait} is true and the operation cannot execute
+     * immediately (the executing set is at capacity), it is refused with a
+     * {@link SheddedOperationException} instead of being queued — it never consumes a waiting slot.
+     * <p>
+     * Intended for optional work (background cache revalidations) whose callers hold a usable
+     * fallback: under load, shedding it at the door costs ~nothing, whereas queueing it would both
+     * delay mandatory operations and burn effort on results the caller may no longer need.
+     */
+    public <A, R> Future<R> addAsyncOperation(A argument, int priority, Object sourceId, AsyncFunction<A, R> executor, boolean rejectIfWouldWait) {
         // Can it be executed now?
         synchronized (executingOperations) {
             if (executingOperations.size() < executingQueueMaxSize) { // Yes
                 executingOperations.add(argument);
                 return executeOperation(argument, executor);
             }
+        }
+
+        // The operation would have to wait — a sheddable one is refused right here, before it
+        // consumes a waiting slot. (A slot freeing up between the check above and this return is
+        // benign: the caller's next attempt gets it.)
+        if (rejectIfWouldWait) {
+            synchronized (waitingOperations) {
+                shedCount++;
+            }
+            return Future.failedFuture(new SheddedOperationException(
+                SheddedOperationException.SERVER_BUSY_PREFIX + ": operation shed (executor at capacity)"));
         }
 
         // No — queue it. The "cancel any same-source pending op" step must happen in the same
@@ -186,6 +212,13 @@ public final class AsyncQueue {
     public int getPeakWaitingCount() {
         synchronized (waitingOperations) {
             return peakWaitingCount;
+        }
+    }
+
+    /** Total operations refused by {@code rejectIfWouldWait} admission since creation. For monitoring. */
+    public int getShedCount() {
+        synchronized (waitingOperations) {
+            return shedCount;
         }
     }
 
