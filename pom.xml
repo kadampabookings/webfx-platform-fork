@@ -153,6 +153,7 @@
         <module>webfx-platform-scheduler</module>
         <module>webfx-platform-scheduler-jre</module>
         <module>webfx-platform-scheduler-vertx</module>
+        <module>webfx-platform-secret-jre</module>
         <module>webfx-platform-service</module>
         <module>webfx-platform-service-gwt-j2cl</module>
         <module>webfx-platform-shutdown</module>

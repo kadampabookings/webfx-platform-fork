@@ -6,9 +6,9 @@
 module webfx.platform.substitution.var.prompt.jre.plugin {
 
     // Direct dependencies modules
-    requires java.desktop;
     requires webfx.platform.conf;
     requires webfx.platform.console;
+    requires webfx.platform.secret.jre;
     requires webfx.platform.substitution.var;
 
     // Exported packages
